@@ -1,4 +1,8 @@
+import {useHttp} from '../../hooks/http.hook';
+import { useDispatch, useSelector } from 'react-redux';
+import { v4 as uuidv4 } from 'uuid';
 
+import { heroesFetching, heroesFetched, heroesFetchingError } from '../../actions';
 
 // Задача для этого компонента:
 // Реализовать создание нового героя с введенными данными. Он должен попадать
@@ -11,8 +15,43 @@
 // данных из фильтров
 
 const HeroesAddForm = () => {
+    const {heroes, heroesLoadingStatus} = useSelector(state => state);
+    const dispatch = useDispatch();
+    const {request} = useHttp();
+
+    const byForm = (e) => {
+        e.preventDefault();
+        const obj = {};
+
+        const formData = new FormData(e.target); 
+        const objData = Object.fromEntries(formData.entries());
+        
+        obj.id = uuidv4();
+        obj.name = objData.name;
+        obj.description = objData.text;
+        obj.element = objData.element;
+       
+        /*  
+       если бы танцевали без сервера
+       const newHeroes =  [...heroes, obj]
+
+        dispatch(heroesFetched(newHeroes)); */
+
+        dispatch(heroesFetching());
+        request("http://localhost:3001/heroes", 'POST', JSON.stringify(obj))
+            .then(() => request("http://localhost:3001/heroes"))
+            .then(data => {
+                dispatch(heroesFetched(data));
+            })
+            .catch(() => dispatch(heroesFetchingError()))
+    }
+
+   /*  const options = () => {
+
+    } */
+
     return (
-        <form className="border p-4 shadow-lg rounded">
+        <form onSubmit={byForm} className="border p-4 shadow-lg rounded">
             <div className="mb-3">
                 <label htmlFor="name" className="form-label fs-4">Имя нового героя</label>
                 <input 
@@ -43,6 +82,7 @@ const HeroesAddForm = () => {
                     id="element" 
                     name="element">
                     <option >Я владею элементом...</option>
+
                     <option value="fire">Огонь</option>
                     <option value="water">Вода</option>
                     <option value="wind">Ветер</option>
