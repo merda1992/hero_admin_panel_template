@@ -1,7 +1,8 @@
 const initialState = {
     heroes: [],
     heroesLoadingStatus: 'idle',
-    filters: []
+    filters: [],
+    activeClass: ''
 }
 
 const reducer = (state = initialState, action) => {
@@ -22,8 +23,23 @@ const reducer = (state = initialState, action) => {
                 ...state,
                 heroesLoadingStatus: 'error'
             }
+        case 'FILTERS_FETCHED':
+            return {
+                ...state,
+                filters: action.payload,
+                heroesLoadingStatus: 'idle'
+            }
+        case 'CLASS_FETCHED':
+            return {
+                ...state,
+                activeClass: action.payload,
+                heroesLoadingStatus: 'idle'
+            }
+
+
         default: return state
     }
 }
 
 export default reducer;
+

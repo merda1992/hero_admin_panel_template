@@ -16,3 +16,17 @@ export const heroesFetchingError = () => {
         type: 'HEROES_FETCHING_ERROR'
     }
 }
+
+export const filtersFetched = (filters) => {
+    return {
+        type: 'FILTERS_FETCHED',
+        payload: filters
+    }
+}
+
+export const classFetched = (filter) => {
+    return {
+        type: 'CLASS_FETCHED',
+        payload: filter
+    }
+}
