@@ -1,6 +1,7 @@
 import {useHttp} from '../../hooks/http.hook';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { CSSTransition, TransitionGroup} from 'react-transition-group';
 
 import { heroesFetching, heroesFetched, heroesFetchingError } from '../../actions';
 import HeroesListItem from "../heroesListItem/HeroesListItem";
@@ -42,19 +43,32 @@ const HeroesList = () => {
 
     const renderHeroesList = (arr) => {
         if (arr.length === 0) {
-            return <h5 className="text-center mt-5">Героев пока нет</h5>
+            return (
+                <CSSTransition
+                timeout={0}
+                classNames="hero">
+                    <h5 className="text-center mt-5">Героев пока нет</h5>
+                </CSSTransition>)
         }
 
         return arr.map(({id, ...props}) => {
-            return <HeroesListItem key={id} deleteItem={() => deleteItem(id) } {...props}/>
+            return (
+            <CSSTransition 
+                    key={id}
+                    timeout={500}
+                    classNames="hero">
+                        <HeroesListItem key={id} deleteItem={() => deleteItem(id) } {...props}/>
+            </CSSTransition>
+            )
         })
     }
 
     const elements = renderHeroesList(heroes);
     return (
-        <ul>
+        <TransitionGroup component="ul">
             {elements}
-        </ul>
+        </TransitionGroup>
+        
     )
 }
 
