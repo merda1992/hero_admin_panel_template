@@ -15,7 +15,8 @@ import { heroesFetching, heroesFetched, heroesFetchingError } from '../../action
 // данных из фильтров
 
 const HeroesAddForm = () => {
-    const {heroes, heroesLoadingStatus} = useSelector(state => state);
+
+    const {filters, activeClass} = useSelector(state => state);
     const dispatch = useDispatch();
     const {request} = useHttp();
 
@@ -41,14 +42,22 @@ const HeroesAddForm = () => {
         request("http://localhost:3001/heroes", 'POST', JSON.stringify(obj))
             .then(() => request("http://localhost:3001/heroes"))
             .then(data => {
-                dispatch(heroesFetched(data));
+                const newHeroes = data.filter(hero => hero.element === activeClass);
+                if(activeClass !== 'all'){
+                    dispatch(heroesFetched(newHeroes));
+                     } else {
+                        dispatch(heroesFetched(data));
+                     }
             })
             .catch(() => dispatch(heroesFetchingError()))
     }
 
-   /*  const options = () => {
-
-    } */
+    const optionList = filters.map((filter, i) => {
+       if(filter !== 'all') {
+       return( 
+            <option key={i} value={filter}>{filter}</option>
+            )
+     }})
 
     return (
         <form onSubmit={byForm} className="border p-4 shadow-lg rounded">
@@ -82,11 +91,7 @@ const HeroesAddForm = () => {
                     id="element" 
                     name="element">
                     <option >Я владею элементом...</option>
-
-                    <option value="fire">Огонь</option>
-                    <option value="water">Вода</option>
-                    <option value="wind">Ветер</option>
-                    <option value="earth">Земля</option>
+                        {optionList}
                 </select>
             </div>
 
