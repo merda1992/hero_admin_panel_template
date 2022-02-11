@@ -16,6 +16,15 @@ const HeroesList = () => {
     const dispatch = useDispatch();
     const {request} = useHttp();
 
+    const deleteItem = (identificator) => {
+
+        request(`http://localhost:3001/heroes/${identificator}`, 'DELETE')
+        .then(() => request("http://localhost:3001/heroes"))
+        .then((data) => dispatch(heroesFetched(data))      
+        ).catch(() => dispatch(heroesFetchingError()))
+
+      }
+
     useEffect(() => {
         dispatch(heroesFetching());
         request("http://localhost:3001/heroes")
@@ -37,7 +46,7 @@ const HeroesList = () => {
         }
 
         return arr.map(({id, ...props}) => {
-            return <HeroesListItem key={id} {...props}/>
+            return <HeroesListItem key={id} deleteItem={() => deleteItem(id) } {...props}/>
         })
     }
 
