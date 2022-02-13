@@ -13,10 +13,10 @@
       "element": "wind"
     },
     {
-      "id": "9fcd3ade-5f05-45f3-ace8-811a6b08a179",
-      "name": "кефириуз",
-      "description": "fsdf",
-      "element": "wind"
+      "id": 3,
+      "name": "Морской герой",
+      "description": "Как аквамен, но не из DC",
+      "element": "water"
     }
   ],
   "filters": [
