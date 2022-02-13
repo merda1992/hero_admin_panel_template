@@ -1,84 +1,68 @@
 import {useHttp} from '../../hooks/http.hook';
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useEffect} from 'react';
+import classNames from 'classnames';
 
-import { heroesFetching, heroesFetched, heroesFetchingError, filtersFetched, classFetched} from '../../actions';
+import { filtersFetching, filtersFetched, filtersFetchingError, activeFilterChanged } from '../../actions';
+import Spinner from '../spinner/Spinner';
 
 // Задача для этого компонента:
 // Фильтры должны формироваться на основании загруженных данных
 // Фильтры должны отображать только нужных героев при выборе
 // Активный фильтр имеет класс active
-// Изменять json-файл для удобства МОЖНО!
-// Представьте, что вы попросили бэкенд-разработчика об этом
 
 const HeroesFilters = () => {
 
-    const {filters, activeClass} = useSelector(state => state);
+    const {filters, filtersLoadingStatus, activeFilter} = useSelector(state => state);
     const dispatch = useDispatch();
     const {request} = useHttp();
 
+    // Запрос на сервер для получения фильтров и последовательной смены состояния
     useEffect(() => {
+        dispatch(filtersFetching());
         request("http://localhost:3001/filters")
-            .then(data => {
-                dispatch(filtersFetched(data))
-            })
-            .catch(() => dispatch(heroesFetchingError()))
-            
+            .then(data => dispatch(filtersFetched(data)))
+            .catch(() => dispatch(filtersFetchingError()))
+
         // eslint-disable-next-line
     }, []);
 
-    const clickFilter = (fil) => {
-        
-            dispatch(heroesFetching());
-            request("http://localhost:3001/heroes")
-                .then(data => {
-                    dispatch(heroesFetched(data))
-                    return data
-                })
-                .then((data)=>{
-                    const newHeroes = data.filter(hero => hero.element === fil);
-                    if(fil !== 'all'){
-                        dispatch(heroesFetched(data));
-                        dispatch(heroesFetched(newHeroes));
-                        dispatch(classFetched(fil))
-                         } else {
-                            dispatch(heroesFetched(data));
-                            dispatch(classFetched(fil))
-                         }
-                })
-                .catch(() => dispatch(heroesFetchingError()))
-
+    if (filtersLoadingStatus === "loading") {
+        return <Spinner/>;
+    } else if (filtersLoadingStatus === "error") {
+        return <h5 className="text-center mt-5">Ошибка загрузки</h5>
     }
 
+    const renderFilters = (arr) => {
+        if (arr.length === 0) {
+            return <h5 className="text-center mt-5">Фильтры не найдены</h5>
+        }
 
-    const inlineBootstrapClass = (fil) => {
-        switch (fil) {
-            case 'all':
-                return "btn btn-outline-dark"
-            case 'fire':
-                return "btn btn-danger"
-            case 'water':
-                return "btn btn-primary"
-            case 'wind':
-                return "btn btn-success"
-            case 'earth':
-                return "btn btn-secondary"
-            default: return 'btn'
-    }}
+        // Данные в json-файле я расширил классами и текстом
+        return arr.map(({name, className, label}) => {
 
-    const buttonsFilter = filters.map((filter, i) => {
-        return(
-        <button onClick={() => clickFilter(filter)} key={i} className={filter === activeClass ?
-           `${inlineBootstrapClass(filter)} active` : inlineBootstrapClass(filter)
-        }>{filter}</button>)
-    })
-  
+            // Используем библиотеку classnames и формируем классы динамически
+            const btnClass = classNames('btn', className, {
+                'active': name === activeFilter
+            });
+            
+            return <button 
+                        key={name} 
+                        id={name} 
+                        className={btnClass}
+                        onClick={() => dispatch(activeFilterChanged(name))}
+                        >{label}</button>
+        })
+    }
+
+    const elements = renderFilters(filters);
+
     return (
         <div className="card shadow-lg mt-4">
             <div className="card-body">
                 <p className="card-text">Отфильтруйте героев по элементам</p>
                 <div className="btn-group">
-                    {buttonsFilter}
+                    {elements}
                 </div>
             </div>
         </div>

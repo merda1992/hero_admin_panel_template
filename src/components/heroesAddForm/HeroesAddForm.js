@@ -1,9 +1,3 @@
-import {useHttp} from '../../hooks/http.hook';
-import { useDispatch, useSelector } from 'react-redux';
-import { v4 as uuidv4 } from 'uuid';
-
-import { heroesFetching, heroesFetched, heroesFetchingError } from '../../actions';
-
 // Задача для этого компонента:
 // Реализовать создание нового героя с введенными данными. Он должен попадать
 // в общее состояние и отображаться в списке + фильтроваться
@@ -14,53 +8,69 @@ import { heroesFetching, heroesFetched, heroesFetchingError } from '../../action
 // Элементы <option></option> желательно сформировать на базе
 // данных из фильтров
 
-const HeroesAddForm = () => {
+import {useHttp} from '../../hooks/http.hook';
+import { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { v4 as uuidv4 } from 'uuid';
 
-    const {filters, activeClass} = useSelector(state => state);
+import { heroCreated } from '../../actions';
+
+const HeroesAddForm = () => {
+    // Состояния для контроля формы
+    const [heroName, setHeroName] = useState('');
+    const [heroDescr, setHeroDescr] = useState('');
+    const [heroElement, setHeroElement] = useState('');
+
+    const {filters, filtersLoadingStatus} = useSelector(state => state);
     const dispatch = useDispatch();
     const {request} = useHttp();
 
-    const byForm = (e) => {
+    const onSubmitHandler = (e) => {
         e.preventDefault();
-        const obj = {};
+        // Можно сделать и одинаковые названия состояний,
+        // хотел показать вам чуть нагляднее
+        // Генерация id через библиотеку
+        const newHero = {
+            id: uuidv4(),
+            name: heroName,
+            description: heroDescr,
+            element: heroElement
+        }
 
-        const formData = new FormData(e.target); 
-        const objData = Object.fromEntries(formData.entries());
-        
-        obj.id = uuidv4();
-        obj.name = objData.name;
-        obj.description = objData.text;
-        obj.element = objData.element;
-       
-        /*  
-       если бы танцевали без сервера
-       const newHeroes =  [...heroes, obj]
+        // Отправляем данные на сервер в формате JSON
+        // ТОЛЬКО если запрос успешен - отправляем персонажа в store
+        request("http://localhost:3001/heroes", "POST", JSON.stringify(newHero))
+            .then(res => console.log(res, 'Отправка успешна'))
+            .then(dispatch(heroCreated(newHero)))
+            .catch(err => console.log(err));
 
-        dispatch(heroesFetched(newHeroes)); */
-
-        dispatch(heroesFetching());
-        request("http://localhost:3001/heroes", 'POST', JSON.stringify(obj))
-            .then(() => request("http://localhost:3001/heroes"))
-            .then(data => {
-                const newHeroes = data.filter(hero => hero.element === activeClass);
-                if(activeClass !== 'all'){
-                    dispatch(heroesFetched(newHeroes));
-                     } else {
-                        dispatch(heroesFetched(data));
-                     }
-            })
-            .catch(() => dispatch(heroesFetchingError()))
+        // Очищаем форму после отправки
+        setHeroName('');
+        setHeroDescr('');
+        setHeroElement('');
     }
 
-    const optionList = filters.map((filter, i) => {
-       if(filter !== 'all') {
-       return( 
-            <option key={i} value={filter}>{filter}</option>
-            )
-     }})
+    const renderFilters = (filters, status) => {
+        if (status === "loading") {
+            return <option>Загрузка элементов</option>
+        } else if (status === "error") {
+            return <option>Ошибка загрузки</option>
+        }
+        
+        // Если фильтры есть, то рендерим их
+        if (filters && filters.length > 0 ) {
+            return filters.map(({name, label}) => {
+                // Один из фильтров нам тут не нужен
+                // eslint-disable-next-line
+                if (name === 'all')  return;
+
+                return <option key={name} value={name}>{label}</option>
+            })
+        }
+    }
 
     return (
-        <form onSubmit={byForm} className="border p-4 shadow-lg rounded">
+        <form className="border p-4 shadow-lg rounded" onSubmit={onSubmitHandler}>
             <div className="mb-3">
                 <label htmlFor="name" className="form-label fs-4">Имя нового героя</label>
                 <input 
@@ -69,7 +79,9 @@ const HeroesAddForm = () => {
                     name="name" 
                     className="form-control" 
                     id="name" 
-                    placeholder="Как меня зовут?"/>
+                    placeholder="Как меня зовут?"
+                    value={heroName}
+                    onChange={(e) => setHeroName(e.target.value)}/>
             </div>
 
             <div className="mb-3">
@@ -80,7 +92,9 @@ const HeroesAddForm = () => {
                     className="form-control" 
                     id="text" 
                     placeholder="Что я умею?"
-                    style={{"height": '130px'}}/>
+                    style={{"height": '130px'}}
+                    value={heroDescr}
+                    onChange={(e) => setHeroDescr(e.target.value)}/>
             </div>
 
             <div className="mb-3">
@@ -89,9 +103,11 @@ const HeroesAddForm = () => {
                     required
                     className="form-select" 
                     id="element" 
-                    name="element">
-                    <option >Я владею элементом...</option>
-                        {optionList}
+                    name="element"
+                    value={heroElement}
+                    onChange={(e) => setHeroElement(e.target.value)}>
+                    <option value="">Я владею элементом...</option>
+                    {renderFilters(filters, filtersLoadingStatus)}
                 </select>
             </div>
 
