@@ -38,7 +38,7 @@ const store = createStore
      ) */
      //
      compose(
-          applyMiddleware(stringMiddleware), 
+          applyMiddleware(stringMiddleware, ReduxThunk), 
           window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__())
      );
 
