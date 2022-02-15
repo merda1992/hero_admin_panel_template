@@ -17,12 +17,6 @@
       "name": "Морской герой",
       "description": "Как аквамен, но не из DC",
       "element": "water"
-    },
-    {
-      "id": "9060e934-e8c8-40e6-b110-562e9f1eeb89",
-      "name": "кефириуз",
-      "description": "dfdf",
-      "element": "water"
     }
   ],
   "filters": [
