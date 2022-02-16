@@ -1,7 +1,8 @@
 import filters from '../reducers/filters';
-import heroes from '../reducers/heroes';
+import heroes from '../components/heroesList/heroesSlice';
 import { configureStore } from '@reduxjs/toolkit';
 
+//собственный мидлвар
 const stringMiddleware = ({dispatch, getState}) => (next) => (action) => {
      if(typeof action === 'string') {
           return next({
@@ -11,7 +12,7 @@ const stringMiddleware = ({dispatch, getState}) => (next) => (action) => {
      return next(action)
 }
 
-//Усилитель стора которые может принимать строку в дипатче
+//Усилитель стора которые может принимать строку в диcпатче - частный пример мидлвара
 const enhancer = (createStore) => (...args) => {
      const store = createStore(...args);
 
