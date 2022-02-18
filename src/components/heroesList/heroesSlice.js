@@ -1,11 +1,20 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, createEntityAdapter } from "@reduxjs/toolkit";
 import {useHttp} from '../../hooks/http.hook';
 
-//осздание начального состояния
+/* //осздание начального состояния
 const initialState = {
     heroes: [],
     heroesLoadingStatus: 'idle'
-}
+} */
+
+//если закинем в курглые скобки что то - то мы перепишем действующие свойства уникальных идентификатором и сущностей - меняем встроенный функционал
+const heroesAdapter = createEntityAdapter();
+
+//создадим начальное состояние на основании адаптера - можем добавить еще свойсвта кроме entities + ids - добавив...
+const initialState = heroesAdapter.getInitialState({
+    //добавляем новое свойсвто
+    heroesLoadingStatus: 'idle',
+});
 
 //возвращает аж 3 экшн криэтора - (пэдинг фулфилд и реджектед)
 export const fetchHeroes = createAsyncThunk(
@@ -27,10 +36,12 @@ const heroesSlice = createSlice({
     reducers: {
         //экшн криеторы и те деййтвия которые будут под них подвязыватсья
         heroCreated: (state, action) => {
-            state.heroes.push(action.payload);
+            //добавим сущность на основании адаптера
+            heroesAdapter.addOne(state, action.payload);
         },
         heroDeleted: (state, action) => {
-            state.heroes = state.heroes.filter(item => item.id !== action.payload);
+            //удалим сущность на основании адаптера
+            heroesAdapter.removeOne(state, action.payload);
         }
     },
     //закинем сторонние редьюсеры коими являются fetchHeroes
@@ -39,7 +50,8 @@ const heroesSlice = createSlice({
             .addCase(fetchHeroes.pending, state => {state.heroesLoadingStatus = 'loading'})
             .addCase(fetchHeroes.fulfilled, (state, action) => {
                 state.heroesLoadingStatus = 'idle';
-                state.heroes = action.payload;
+                //воспользуемся командой из адаптера для установки новых данных 
+                heroesAdapter.setAll(state, action.payload);
             })
             .addCase(fetchHeroes.rejected, (state, action) => {
                 state.heroes.push(action.payload);
@@ -53,6 +65,10 @@ const heroesSlice = createSlice({
 const {actions, reducer} = heroesSlice;
 
 export default reducer;
+
+//привяжем селекторы адаптера к героям
+export const {selectAll} = heroesAdapter.getSelectors(state => state.heroes);
+
 export const {
     heroesFetching,
     heroesFetched,
